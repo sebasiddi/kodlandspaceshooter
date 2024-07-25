@@ -1,8 +1,8 @@
 import sys, pygame, random
 
-# Inicialización de pygame
+# Inicialización de pygame y mixer de sonido
 pygame.init()
-
+pygame.mixer.init() 
 # Creación de la Ventana
 WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -16,6 +16,15 @@ BLACK = (0, 0, 0)
 font = pygame.font.Font("assets/Aero.ttf", 35)
 font2 = pygame.font.Font("assets/Aero.ttf", 25)
 
+
+# Cargar sonidos
+start_sound = pygame.mixer.Sound("assets/inicio.wav") 
+start_sound.set_volume(0.1)
+shoot_sound = pygame.mixer.Sound("assets/disparo.wav") 
+explosion_sound = pygame.mixer.Sound("assets/explosion.wav") 
+gameover_sound = pygame.mixer.Sound("assets/gameover.wav") 
+
+
 # Función para mostrar texto en pantalla
 def generar_texto(text, font, color, surface, x, y):
     text_obj = font.render(text, True, color)
@@ -27,6 +36,7 @@ def generar_texto(text, font, color, surface, x, y):
 def main_menu():
     while True:
         screen.fill(BLACK)
+        start_sound.play()
         generar_texto("Kodland Space Shooter", font, WHITE, screen, WIDTH // 2, HEIGHT // 2 - 50)
         generar_texto("Presione F para Fácil o D para Difícl", font, WHITE, screen, WIDTH // 2, HEIGHT // 2 + 50)
         pygame.display.update()
@@ -62,6 +72,7 @@ class Player(pygame.sprite.Sprite):
         bullet = Bullet(self.rect.centerx, self.rect.top)
         all_sprites.add(bullet)
         bullets.add(bullet)
+        shoot_sound.play()
 
 # Clase para los enemigos
 class Enemy(pygame.sprite.Sprite):
@@ -100,10 +111,12 @@ class Bullet(pygame.sprite.Sprite):
 # Función para mostrar el mensaje de Game Over y reiniciar el juego o salir
 def game_over():
     screen.fill(BLACK)
+    gameover_sound.play()
     generar_texto("Game Over", font, WHITE, screen, WIDTH // 2, HEIGHT // 2 - 50)
     generar_texto("Tu puntaje: "+str(score), font, WHITE, screen, WIDTH // 2, HEIGHT // 2 + 50)
     generar_texto("presiona cualquier tecla para continuar", font2, WHITE, screen, WIDTH // 2, HEIGHT // 2 + 100)
     pygame.display.update()
+    pygame.time.wait(2000)
     waiting = True
     while waiting:
         for event in pygame.event.get():
@@ -119,7 +132,7 @@ def game_over():
 # Bucle principal del juego
 def game_loop(difficulty):
     global all_sprites, bullets, score
-
+    start_sound.stop()
     player = Player()
     all_sprites = pygame.sprite.Group()
     enemies = pygame.sprite.Group()
@@ -152,8 +165,9 @@ def game_loop(difficulty):
         all_sprites.update()
         hits = pygame.sprite.groupcollide(enemies, bullets, True, True)
         for hit in hits:
-            enemy = Enemy()
             score += 10
+            explosion_sound.play()
+            enemy = Enemy()
             all_sprites.add(enemy)
             enemies.add(enemy)
 
